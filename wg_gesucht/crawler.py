@@ -474,7 +474,7 @@ class WgGesuchtCrawler:
             self.counter,
             "time" if self.counter <= 1 else "times",
         )
-        # pauses for 4-5 mins before searching again
-        time.sleep(random.randint(240, 300))
+        # pauses for 2-3 mins before searching again
+        time.sleep(random.randint(120, 180))
         self.counter += 1
         self.search()
