@@ -238,12 +238,12 @@ class WgGesuchtCrawler:
         url_list = list()
         for result in filter_results:
             post_date_link = result.find("td", {"class": "ang_spalte_datum"}).find("a")
-            #  ignores ads older than 2 days
+            #  ignores ads older than 1 day
             try:
                 post_date = datetime.datetime.strptime(
                     post_date_link.text.strip(), "%d.%m.%Y"
                 ).date()
-                if post_date >= datetime.date.today() - datetime.timedelta(days=2):
+                if post_date >= datetime.date.today() - datetime.timedelta(days=1):
                     complete_href = "https://www.wg-gesucht.de/{}".format(
                         post_date_link.get("href")
                     )
