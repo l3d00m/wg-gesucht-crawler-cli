@@ -116,6 +116,9 @@ class WgGesuchtCrawler:
         except requests.exceptions.ConnectionError:
             self.logger.exception("Could not connect to internet")
             sys.exit(1)
+        except:
+            self.logger.exception("An exception was thrown while fetching " + "'" + url + "'")
+            sys.exit(1)
 
         if self.no_captcha(page):
             self.logger.info("%s: requested successfully", url)
