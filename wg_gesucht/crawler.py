@@ -416,7 +416,7 @@ class WgGesuchtCrawler:
             "Referer": send_message_url,
             "Accept": "application/json, text/javascript, */*",
             "Origin": "https://www.wg-gesucht.de",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36",
         }
 
         try:
