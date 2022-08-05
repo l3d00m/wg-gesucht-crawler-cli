@@ -1,10 +1,15 @@
 ===============================
-WG Gesucht Crawler: Updated for 2021
+WG Gesucht Crawler: Updated for 2022
 ===============================
 
 
 Python web crawler / scraper for WG-Gesucht. Crawls the WG-Gesucht site for new apartment listings and send a message to the poster, based off your saved filters and saved text template.
-I updated and field tested for use in 2021. I tweaked the message frequency and oldest offer creation date to reflect my experience of avoiding re-CAPTCHA. Good luck finding your perfect rent offer.
+I updated and field tested for use in 2022:
+* I tweaked the message frequency and oldest offer creation date to reflect my experience of avoiding re-CAPTCHA.
+* Updated the useragent to a newer Chrome version.
+* Fixed the exception mechanism in get_page.
+* Updated all dependencies to their latest version.
+Good luck finding your perfect rent offer.
 
 Original repository by `Grant Williams <https://github.com/grantwilliams>`_.
 
