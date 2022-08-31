@@ -11,7 +11,12 @@ I updated and field tested for use in 2022
 * I tweaked the message frequency and oldest offer creation date to reflect my experience of avoiding re-CAPTCHA.
 * Updated the useragent to a newer Chrome version.
 * Fixed the exception mechanism in get_page.
+* Implemented a new cookie authentication mechanism, and deprecated the old one.
+* Add a macro in the message template that replaces `{{greeting}}` with a formal or informal greeting depending on the name of the submitter.
+* Add email templates for formal and informal messages.
+* Fixed exception handling
 * Updated all dependencies to their latest version.
+* Skip all ads with submitter names beginning with "Corps" :)
 
 Good luck finding your perfect rent offer.
 

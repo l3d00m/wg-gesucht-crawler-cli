@@ -14,7 +14,9 @@ from .crawler import WgGesuchtCrawler
     "--filter-names",
     help='Names of the filters you want to use (comma separated ie: --filter-names="Filter 1,Filter2"',
 )
-@click.option("--template", help="Name of the email template you want to use")
+@click.option("--template-formal", help="Name of the formal email template you want to use")
+@click.option("--template-informal", help="Name of the informal email template you want to use")
+@click.option("--cookie-file", help="Path of the cookie file")
 @click.option("--share-email", is_flag=True, help="Share your email address with people you send messages to")
 @click.option("--change-email", is_flag=True, help="Change your saved email address")
 @click.option("--change-password", is_flag=True, help="Change your saved password")
@@ -31,9 +33,11 @@ def cli(
     change_phone,
     change_all,
     no_save,
-    template,
+    template_formal,
+    template_informal,
     filter_names,
-    share_email
+    share_email,
+    cookie_file
 ):
     """
     -------------------------Wg-Gesucht crawler-------------------------\n
@@ -95,15 +99,23 @@ def cli(
         user.save_details(login_info_file, login_info)
         logger.info("User login details saved to file")
 
-    if template:
-        template = template.lower()
+    if template_formal:
+        template_formal = template_formal.lower()
+    
+    if template_informal:
+        template_informal = template_informal.lower()
 
     if filter_names:
         filter_names = [filter.strip().lower() for filter in filter_names.split(",")]
 
     wg_gesucht = WgGesuchtCrawler(
-        login_info, wg_ad_links, offline_ad_links, logs_folder, template, filter_names, share_email
+        login_info, wg_ad_links, offline_ad_links, logs_folder, template_formal, template_informal, filter_names, share_email, cookie_file
     )
-    wg_gesucht.sign_in()
+
+    if not cookie_file:
+        wg_gesucht.sign_in()
+    else:
+        logger.info("Using Cookie file instead of sign in.")
+
     logger.warning("Running until canceled, check info.log for details...")
     wg_gesucht.search()
