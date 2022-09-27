@@ -6,7 +6,6 @@ import json
 import time
 import errno
 import random
-import urllib
 import logging
 import datetime
 import requests
@@ -67,7 +66,7 @@ class WgGesuchtCrawler:
         error_file_handler.setLevel(logging.ERROR)
 
         stream_handler = logging.StreamHandler()
-        stream_handler.setLevel(logging.WARNING)
+        stream_handler.setLevel(logging.DEBUG)
 
         logger.addHandler(info_file_handler)
         logger.addHandler(error_file_handler)
@@ -87,7 +86,7 @@ class WgGesuchtCrawler:
 
         try:
             login = self.session.post(
-                "https://www.wg-gesucht.de/ajax/api/Smp/api.php?action=login",
+                "https://www.wg-gesucht.de/ajax/sessions.php?action=login",
                 json=payload,
             )
         except requests.exceptions.Timeout:
@@ -97,7 +96,7 @@ class WgGesuchtCrawler:
             self.logger.exception("Could not connect to internet")
             sys.exit(1)
 
-        if login.json() is True:
+        if 'access_token' in login.json():
             self.logger.info("Logged in successfully")
         else:
             self.logger.warning(
@@ -109,7 +108,10 @@ class WgGesuchtCrawler:
         # randomise time between requests to avoid reCAPTCHA
         time.sleep(random.randint(5, 8))
         try:
-            page = self.session.get(url)
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36",
+            }
+            page = self.session.get(url, headers=headers)
         except requests.exceptions.Timeout:
             self.logger.exception("Timed out trying to log in")
             sys.exit(1)
@@ -416,7 +418,7 @@ class WgGesuchtCrawler:
             "Referer": send_message_url,
             "Accept": "application/json, text/javascript, */*",
             "Origin": "https://www.wg-gesucht.de",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36",
         }
 
         try:
