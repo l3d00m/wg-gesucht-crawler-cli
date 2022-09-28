@@ -17,13 +17,13 @@ with open(path.join(here, 'HISTORY.rst'), encoding='utf-8') as history_file:
     history = history_file.read().replace('.. :changelog:', '')
 
 requirements = [
-    'beautifulsoup4==4.6.0',
-    'certifi==2018.4.16',
-    'chardet==3.0.4',
-    'click==6.7',
-    'idna==2.7',
-    'requests==2.21.0',
-    'urllib3==1.23',
+    'beautifulsoup4==4.11.1',
+    'certifi==2022.6.15',
+    'chardet==5.0.0',
+    'click==8.1.3',
+    'idna==3.3',
+    'requests==2.28.1',
+    'urllib3==1.26.11',
 ]
 
 test_requirements = []

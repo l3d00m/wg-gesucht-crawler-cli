@@ -36,7 +36,7 @@ class WgGesuchtCrawler:
         self.filter_names = filter_names
         self.share_email = share_email
         self.submit_message_url = (
-            "https://www.wg-gesucht.de/ajax/api/Smp/api.php?action=conversations"
+            "https://www.wg-gesucht.de/ajax/conversations.php?action=conversations"
         )
         self.session = requests.Session()
         self.logger = self.get_logger()
@@ -117,6 +117,9 @@ class WgGesuchtCrawler:
             sys.exit(1)
         except requests.exceptions.ConnectionError:
             self.logger.exception("Could not connect to internet")
+            sys.exit(1)
+        except:
+            self.logger.exception("An exception was thrown while fetching " + "'" + url + "'")
             sys.exit(1)
 
         if self.no_captcha(page):
@@ -225,8 +228,14 @@ class WgGesuchtCrawler:
 
     def change_to_list_details_view(self, soup, list_view_href=None):
         view_type_links = soup.find_all("a", href=True, title=True)
-        if view_type_links[0]["title"] == "Listenansicht":
-            list_view_href = view_type_links[0]["href"]
+        if len(view_type_links) > 0:
+            if view_type_links[0]["title"] == "Listenansicht":
+                list_view_href = view_type_links[0]["href"]
+            elif view_type_links[0]["title"] == "Detailansicht":
+                self.logger.info("Already using the list view")
+                return soup
+        else:
+            self.logger.warning("Could not find view switch buttons!")
 
         #  change gallery view to list details view
         if list_view_href:
@@ -240,12 +249,12 @@ class WgGesuchtCrawler:
         url_list = list()
         for result in filter_results:
             post_date_link = result.find("td", {"class": "ang_spalte_datum"}).find("a")
-            #  ignores ads older than 2 days
+            #  ignores ads older than 1 day
             try:
                 post_date = datetime.datetime.strptime(
                     post_date_link.text.strip(), "%d.%m.%Y"
                 ).date()
-                if post_date >= datetime.date.today() - datetime.timedelta(days=2):
+                if post_date >= datetime.date.today() - datetime.timedelta(days=1):
                     complete_href = "https://www.wg-gesucht.de/{}".format(
                         post_date_link.get("href")
                     )
@@ -276,6 +285,9 @@ class WgGesuchtCrawler:
                 )
 
                 link_table = soup.find("table", {"id": "table-compact-list"})
+                if not link_table:
+                    self.logger.error("Could not find link table")
+                    return url_list
 
                 pagination = soup.find("ul", {"class": "pagination"})
                 if not pagination:
@@ -377,6 +389,13 @@ class WgGesuchtCrawler:
     def email_apartment(self, url, template_text):
         ad_info = self.get_info_from_ad(url)
 
+        sendMessageBtn = ad_info["ad_page_soup"].find("a", {"class": "btn btn-block btn-md wgg_orange"})
+
+        if not sendMessageBtn:
+            self.logger.info("Could not find submit form, you have possibly already sent a message to this user")
+            self.update_files(url, ad_info)
+            return
+
         try:
             send_message_url = (
                 ad_info["ad_page_soup"]
@@ -400,7 +419,7 @@ class WgGesuchtCrawler:
             )
             self.update_files(url, ad_info)
             return
-        
+
         ad_submitter = (
             submit_form_page_soup.find(
                 attrs={"class": "control-label", "for": "message_input"}
@@ -421,6 +440,39 @@ class WgGesuchtCrawler:
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36",
         }
 
+        # Create a personalized greeting
+        nameList = ad_submitter.split(' ')
+        finalGreeting = ""
+        template_text = ""
+
+        if len(nameList) > 1:
+            if nameList[0] == "Herr":
+                # Use the last entry in the list for the surname
+                finalGreeting = "Hallo Herr " + nameList[-1] + ","
+                self.logger.info("Submitter is a male. Use surname.")
+            elif nameList[0] == "Frau":
+                finalGreeting = "Hallo Frau " + nameList[-1] + ","
+                self.logger.info("Submitter is a female. Use surname.")
+            # Assume that we can use the full first name
+            elif nameList[0].replace('.', '') == nameList[0] and len(nameList[0]) > 1:
+                finalGreeting = "Hi " + nameList[0] + ","
+                self.logger.info("Use first name.")
+            elif nameList[0] == "Corps":
+                self.logger.info("Skipped Corps")
+                self.update_files(url, ad_info)
+                return
+            else:
+                finalGreeting = "Hi,"
+        elif ad_submitter.strip() == ad_submitter:
+            self.logger.info("Submitter uses only his first name.")
+            finalGreeting = "Hi " + ad_submitter + ","
+        else:
+            finalGreeting = "Hi,"
+
+        # Replace Stub
+        template_text = template_text.replace("{{greeting}}", finalGreeting)
+        self.logger.info("Use the formal template with greeting: %s", finalGreeting)
+
         try:
             payload = self.get_payload(submit_form, template_text)
         except AttributeError:
@@ -435,12 +487,23 @@ class WgGesuchtCrawler:
         try:
             sent_message = self.session.post(
                 self.submit_message_url, data=json_data, headers=headers
-            ).json()
+            )
         except requests.exceptions.Timeout:
             self.logger.exception(
                 "Timed out sending a message to %s, will try again next time",
                 ad_info["ad_submitter"],
             )
+            return
+        except:
+            self.logger.exception("Detected an error while sending a message to %s",
+                                  ad_info["ad_submitter"])
+            return
+
+        try:
+            sent_message = sent_message.json()
+        except:
+            self.logger.exception("Detected an error while parsing message response from %s",
+                                  ad_info["ad_submitter"])
             return
 
         if not sent_message.get("conversation_id", None):
