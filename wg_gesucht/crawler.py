@@ -187,6 +187,7 @@ class WgGesuchtCrawler:
         if not chosen_text:
             no_template_error()
         else:
+            chosen_text = chosen_text.replace("\r\n", "\n")
             return chosen_text.lstrip().rstrip()
 
     def fetch_filters(self):
@@ -449,7 +450,6 @@ class WgGesuchtCrawler:
         # Create a personalized greeting
         nameList = ad_submitter.split(' ')
         finalGreeting = ""
-        template_text = ""
 
         if len(nameList) > 1:
             if nameList[0] == "Herr":
