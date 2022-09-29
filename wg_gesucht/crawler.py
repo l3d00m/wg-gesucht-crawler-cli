@@ -1,13 +1,15 @@
-import os
-import re
 import csv
-import sys
-import json
-import time
-import errno
-import random
-import logging
 import datetime
+import errno
+import json
+import logging
+import os
+import random
+import re
+import sys
+import time
+import urllib.parse
+
 import requests
 from bs4 import BeautifulSoup
 
@@ -39,6 +41,14 @@ class WgGesuchtCrawler:
             "https://www.wg-gesucht.de/ajax/conversations.php?action=conversations"
         )
         self.session = requests.Session()
+        self.session.headers.update(
+            {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36"})
+        # Required for fetching apartments filter list, not sure why. Otherwise WG-gesucht does not provide a 301 in Berlin
+        # might be required to remove it for filters outside of Berlin?
+        self.session.cookies.set("last_city", "8", domain="www.wg-gesucht.de")
+        self.session.cookies.set("last_cat", "0", domain="www.wg-gesucht.de")
+        self.session.cookies.set("last_type", "0", domain="www.wg-gesucht.de")
+
         self.logger = self.get_logger()
         self.counter = 1
         self.continue_next_page = True
@@ -108,10 +118,7 @@ class WgGesuchtCrawler:
         # randomise time between requests to avoid reCAPTCHA
         time.sleep(random.randint(5, 8))
         try:
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36",
-            }
-            page = self.session.get(url, headers=headers)
+            page = self.session.get(url)
         except requests.exceptions.Timeout:
             self.logger.exception("Timed out trying to log in")
             sys.exit(1)
@@ -193,12 +200,12 @@ class WgGesuchtCrawler:
         filters_to_check = []
         if self.filter_names:
             filters_to_check = [
-                filter.get("href")
+                urllib.parse.unquote(filter.get("href"))
                 for filter in filter_results
                 if filter.text.strip().lower() in self.filter_names
             ]
         else:
-            filters_to_check = [filter.get("href") for filter in filter_results]
+            filters_to_check = [urllib.parse.unquote(filter.get("href")) for filter in filter_results]
 
         if self.filter_names and len(filters_to_check) != len(self.filter_names):
             self.logger.warning(
@@ -436,8 +443,7 @@ class WgGesuchtCrawler:
             "Cache-Control": "no-cache",
             "Referer": send_message_url,
             "Accept": "application/json, text/javascript, */*",
-            "Origin": "https://www.wg-gesucht.de",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36",
+            "Origin": "https://www.wg-gesucht.de"
         }
 
         # Create a personalized greeting
@@ -471,7 +477,7 @@ class WgGesuchtCrawler:
 
         # Replace Stub
         template_text = template_text.replace("{{greeting}}", finalGreeting)
-        self.logger.info("Use the formal template with greeting: %s", finalGreeting)
+        self.logger.debug("Use the template with greeting (if enabled in template): %s", finalGreeting)
 
         try:
             payload = self.get_payload(submit_form, template_text)

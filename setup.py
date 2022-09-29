@@ -18,12 +18,12 @@ with open(path.join(here, 'HISTORY.rst'), encoding='utf-8') as history_file:
 
 requirements = [
     'beautifulsoup4==4.11.1',
-    'certifi==2022.6.15',
+    'certifi==2022.9.24',
     'chardet==5.0.0',
     'click==8.1.3',
-    'idna==3.3',
+    'idna==3.4',
     'requests==2.28.1',
-    'urllib3==1.26.11',
+    'urllib3==1.26.11'
 ]
 
 test_requirements = []
