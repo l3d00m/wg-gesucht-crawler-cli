@@ -452,28 +452,23 @@ class WgGesuchtCrawler:
         finalGreeting = ""
 
         if len(nameList) > 1:
-            if nameList[0] == "Herr":
-                # Use the last entry in the list for the surname
-                finalGreeting = "Hallo Herr " + nameList[-1] + ","
-                self.logger.info("Submitter is a male. Use surname.")
-            elif nameList[0] == "Frau":
-                finalGreeting = "Hallo Frau " + nameList[-1] + ","
-                self.logger.info("Submitter is a female. Use surname.")
+            if nameList[0] == "Herr" or nameList[0] == "Frau":
+                finalGreeting = "Hiii,"
             # Assume that we can use the full first name
             elif nameList[0].replace('.', '') == nameList[0] and len(nameList[0]) > 1:
-                finalGreeting = "Hi " + nameList[0] + ","
+                finalGreeting = "Hii " + nameList[0] + ","
                 self.logger.info("Use first name.")
             elif nameList[0] == "Corps":
                 self.logger.info("Skipped Corps")
                 self.update_files(url, ad_info)
                 return
             else:
-                finalGreeting = "Hi,"
+                finalGreeting = "Hiii,"
         elif ad_submitter.strip() == ad_submitter:
             self.logger.info("Submitter uses only his first name.")
-            finalGreeting = "Hi " + ad_submitter + ","
+            finalGreeting = "Hii " + ad_submitter + ","
         else:
-            finalGreeting = "Hi,"
+            finalGreeting = "Hiii,"
 
         # Replace Stub
         template_text = template_text.replace("{{greeting}}", finalGreeting)
@@ -514,9 +509,10 @@ class WgGesuchtCrawler:
 
         if not sent_message.get("conversation_id", None):
             self.logger.warning(
-                "Failed to send message to %s, will try again next time",
+                "Failed to send message to %s, will try again next time.",
                 ad_info["ad_submitter"],
             )
+            self.logger.info("Message object %s", sent_message)
             return
 
         self.update_files(url, ad_info)
