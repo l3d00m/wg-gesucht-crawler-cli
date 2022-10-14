@@ -452,7 +452,7 @@ class WgGesuchtCrawler:
         finalGreeting = ""
 
         if len(nameList) > 1:
-            if nameList[0] == "Herr" or nameList[0] == "Frau":
+            if nameList[0] == "Herr" or nameList[0] == "Frau" or "wg" in ad_submitter.lower():
                 finalGreeting = "Hiii,"
             # Assume that we can use the full first name
             elif nameList[0].replace('.', '') == nameList[0] and len(nameList[0]) > 1:
